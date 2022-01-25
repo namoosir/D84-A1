@@ -27,18 +27,18 @@
 /**********************************************************************
 % COMPLETE THIS TEXT BOX:
 %
-% 1) Student Name:		
-% 2) Student Name:		
+% 1) Student Name: Nazmus Saqeeb		
+% 2) Student Name: Mutasem Kharsa
 %
-% 1) Student number:
+% 1) Student number: 1006206007
 % 2) Student number:
 % 
-% 1) UtorID
+% 1) UtorID: saqeebna
 % 2) UtorID
 % 
 % We hereby certify that the work contained here is our own
 %
-% ____________________             _____________________
+%  Nazmus Saqeeb					
 % (sign with your name)            (sign with your name)
 ***********************************************************************/
 
@@ -194,11 +194,97 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
  ********************************************************************************************************/
 
  // Stub so that the code compiles/runs - The code below will be removed and replaced by your code!
+ //BFS
+ if (mode == 0) {
+	queue* q = initQueue();
+	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	int num_visited = 1;
+	visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
+	int pred[graph_size];
+	int found_x = -1, found_y = -1;
 
- path[0][0]=mouse_loc[0][0];
- path[0][1]=mouse_loc[0][1];
- path[1][0]=mouse_loc[0][0];
- path[1][1]=mouse_loc[0][1];
+	for (int i = 0; i < graph_size; i++) {
+		pred[i] = -1;
+	}
+
+	enqueue(q, start);
+
+	while(!emptyQueue(q)) {
+		// printf("here\n");
+
+		int cur = dequeue(q);
+
+		printQueue(q);
+
+		int cur_x = cur % size_X;
+		int cur_y = cur/size_Y;
+
+		for (int i = 0; i < cheeses; i++) {
+			if (cur_x == cheese_loc[i][0] && cur_y == cheese_loc[i][1]) {
+				found_x = cur_x;
+				found_y = cur_y;
+				break;
+			}
+		}
+
+		if (found_x != -1 && found_y != -1) {
+			break;
+		}
+
+		if (gr[cur][0] != 0 && !in(visit_order, cur-size_X) && !isCat(cat_loc, cats, cur-size_X)) {
+			enqueue(q, cur-size_X);
+			num_visited++;
+			put(visit_order, cur-size_X, num_visited);
+			pred[cur-size_X] = cur;
+		}
+		if (gr[cur][1] != 0 && !in(visit_order, cur+1) && !isCat(cat_loc, cats, cur+1)) {
+			enqueue(q, cur+1);
+			num_visited++;
+			put(visit_order, cur+1, num_visited);
+			pred[cur+1] = cur;
+		}
+		if (gr[cur][2] != 0 && !in(visit_order, cur+size_X) && !isCat(cat_loc, cats, cur+size_X)) {
+			enqueue(q, cur+size_X);
+			num_visited++;
+			put(visit_order, cur+size_X, num_visited);
+			pred[cur+size_X] = cur;
+		}
+		if (gr[cur][3] != 0 && !in(visit_order, cur-1) && !isCat(cat_loc, cats, cur-1)) {
+			enqueue(q, cur-1);
+			num_visited++;
+			put(visit_order, cur-1, num_visited);
+			pred[cur-1] = cur;
+		}
+	}
+
+	int reversed_path[graph_size][2];
+	int counter = 0;
+	int temp_x = found_x;
+	int temp_y = found_y;
+
+	while (pred[temp_x + temp_y*size_X] != -1) {
+		reversed_path[counter][0] = temp_x;
+		reversed_path[counter][1] = temp_y;
+		counter++;
+		temp_x = pred[temp_x + temp_y*size_X] % size_X;
+		temp_y = pred[temp_x + temp_y*size_X] % size_Y;
+	}
+
+	int total_nodes = counter;
+	counter--;
+
+	for (int i = 0; i < total_nodes; i++) {
+		path[i][0] = reversed_path[counter][0];
+		path[i][1] = reversed_path[counter][1];
+		counter--;
+	}
+ //DFS
+ } else if (mode == 1) {
+
+ //A*
+ } else if (mode == 2) {
+
+ }
 
  return;
 }
@@ -247,3 +333,110 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
  return(1);		// <-- Evidently you will need to update this.
 }
 
+queue* initQueue() {
+	queue* q = (queue*)malloc(sizeof(queue));
+	q->head=-1;
+	q->tail=-1;
+	return q;
+}
+void enqueue(queue* q, int x) {
+	if (q->tail!=graph_size-1) {
+		if (q->head==-1) {
+			q->head = 0;
+		}
+		q->tail++;
+		q->items[q->tail] = x;
+	}
+}
+int dequeue(queue* q) {
+	int item;
+	if (!emptyQueue(q)) {
+		item = q->items[q->head];
+		q->head++;
+		if (q->head > q->tail) {
+			q->head = -1;
+			q->tail = -1;
+		}
+	} else {
+		return -1;
+	}
+	return item;
+}
+int emptyQueue(queue* q) {
+	if (q->tail == -1) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+void printQueue(queue* q) {
+	int temp_head = q->head;
+	while (temp_head != q->tail + 1) {
+		printf(" %d",q->items[temp_head]);
+		temp_head++;
+	}
+	printf("\n");
+}
+
+stack* initStack() {
+	stack* s = (stack*)malloc(sizeof(stack));
+	s->top = -1;
+	return s;
+}
+
+void push(stack* s, int x) {
+	if (s->top != graph_size-1) {
+		s->top++;
+		s->items[s->top] = x;
+	}
+}
+
+int pop(stack* s) {
+	int item;
+	if (!emptyStack(s)) {
+		item = s->items[s->top];
+		s->top--;
+	} else {
+		return 1;
+	}
+	return item;
+}
+
+int emptyStack(stack* s) {
+	if (s->top == -1) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+int in(int arr[size_X][size_Y], int search) {
+	int x = search % size_X;
+	int y = search/size_Y;
+
+	if (arr[x][y]>0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+void put(int arr[size_X][size_Y], int val, int order) {
+	int x = val % size_X;
+	int y = val/size_Y;
+
+	arr[x][y] = order;
+}
+
+int isCat(int cat_loc[10][2], int cats, int check) {
+	int x = check % size_X;
+	int y = check / size_X;
+
+	for (int i = 0; i < cats; i++) {
+		if (cat_loc[i][0] == x && cat_loc[i][1] == y) {
+			return 1;
+		}
+	}
+	return 0;
+}

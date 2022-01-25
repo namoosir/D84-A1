@@ -36,6 +36,31 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 
 // If you need to add any function prototypes yourself, you can do so *below* this line.
 
+typedef struct queue {
+	int items[graph_size];
+	int head;
+	int tail;
+} queue;
+
+queue* initQueue();
+void enqueue(queue* q, int x);
+int dequeue(queue* q);
+int emptyQueue(queue* q);
+void printQueue(queue* q);
+
+typedef struct stack {
+	int items[graph_size];
+	int top;
+} stack;
+
+stack* initStack();
+void push(stack* s, int x);
+int pop(stack* s);
+int emptyStack(stack* s);
+
+int in(int arr[size_X][size_Y], int search);
+void put(int arr[size_X][size_Y], int val, int order);
+int isCat(int cat_loc[10][2], int cats, int check);
 
 #endif
 
