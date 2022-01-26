@@ -214,7 +214,7 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 
 		int cur = dequeue(q);
 
-		printQueue(q);
+		//printQueue(q);
 
 		int cur_x = cur % size_X;
 		int cur_y = cur/size_Y;
@@ -261,13 +261,20 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 	int counter = 0;
 	int temp_x = found_x;
 	int temp_y = found_y;
+	int temp_mid; //BETTE NAME?
+
+	//THIS IS TEMP
+	if(temp_x == -1 || temp_y == -1){
+		return;
+	}
 
 	while (pred[temp_x + temp_y*size_X] != -1) {
 		reversed_path[counter][0] = temp_x;
 		reversed_path[counter][1] = temp_y;
+		temp_mid = pred[temp_x + temp_y*size_X] % size_X;
+		temp_y = pred[temp_x + temp_y*size_X] / size_Y;
+		temp_x = temp_mid;
 		counter++;
-		temp_x = pred[temp_x + temp_y*size_X] % size_X;
-		temp_y = pred[temp_x + temp_y*size_X] % size_Y;
 	}
 
 	int total_nodes = counter;
@@ -278,6 +285,7 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		path[i][1] = reversed_path[counter][1];
 		counter--;
 	}
+	printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
  //DFS
  } else if (mode == 1) {
 
