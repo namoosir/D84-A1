@@ -44,6 +44,7 @@ typedef struct queue {
 
 queue* initQueue();
 void enqueue(queue* q, int x);
+void sorted_enqueue(queue* q, int x);
 int dequeue(queue* q);
 int emptyQueue(queue* q);
 void printQueue(queue* q);
@@ -63,6 +64,12 @@ void freeStack(stack* s);
 int in(int arr[size_X][size_Y], int search);
 void put(int arr[size_X][size_Y], int val, int order);
 int isCat(int cat_loc[10][2], int cats, int check);
+
+//This was an edit on code from https://www.programiz.com/dsa/priority-queue
+int p_queue_size;
+bool in_queue(int array[][2], int num);
+void deleteRoot(int array[][2], int num);
+void insert(int array[][2], int newNum, int node_num);
 
 #endif
 
