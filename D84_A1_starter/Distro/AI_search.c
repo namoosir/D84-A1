@@ -256,6 +256,8 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 			pred[cur-1] = cur;
 		}
 	}
+	
+	freeQueue(q);
 
 	int reversed_path[graph_size][2];
 	int counter = 0;
@@ -492,6 +494,10 @@ void printQueue(queue* q) {
 		temp_head++;
 	}
 	printf("\n");
+}
+
+void freeQueue(queue* q) {
+	free(q);
 }
 
 stack* initStack() {

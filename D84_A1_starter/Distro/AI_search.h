@@ -48,6 +48,7 @@ void sorted_enqueue(queue* q, int x);
 int dequeue(queue* q);
 int emptyQueue(queue* q);
 void printQueue(queue* q);
+void freeQueue(queue* q);
 
 typedef struct stack {
 	int items[graph_size];
