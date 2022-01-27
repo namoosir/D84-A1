@@ -263,7 +263,7 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 	int temp_y = found_y;
 	int temp_mid; //BETTE NAME?
 
-	//THIS IS TEMP
+	//THIS IS TEMP FOR PATH NOT FOUND
 	if(temp_x == -1 || temp_y == -1){
 		return;
 	}
@@ -285,13 +285,120 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		path[i][1] = reversed_path[counter][1];
 		counter--;
 	}
+	path[total_nodes][0] = path[total_nodes-1][0];
+	path[total_nodes][1] = path[total_nodes-1][1];
 	printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
  //DFS
  } else if (mode == 1) {
 
  //A*
  } else if (mode == 2) {
+	int cost_array[graph_size];
+	int p_queue[graph_size][2];
+	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	int pred[graph_size];
+	int found_x = -1, found_y = -1;
+	int num_visited = 0;
+	for (int i = 0; i < graph_size; i++) {
+		pred[i] = -1;
+		cost_array[i] = -1;
+	}
+	cost_array[start] = 0;
 
+	insert(p_queue, 0, start);
+
+	int cur;
+	int cur_x;
+	int cur_y;
+	int cur_cost;
+
+	while(p_queue_size > 0){
+
+		cur = p_queue[0][1];
+		cur_cost = p_queue[0][0];
+		cur_x = cur % size_X;
+		cur_y = cur/size_Y;
+		deleteRoot(p_queue, cur);
+
+		for (int i = 0; i < cheeses; i++){
+			if (cur_x == cheese_loc[i][0] && cur_y == cheese_loc[i][1]){
+				found_x = cur_x;
+				found_y = cur_y;
+				break;
+			}
+		}
+
+		if (found_x != -1 && found_y != -1){
+			break;
+		}
+		
+		int difference;
+		int real_cost;
+		int f_cost;
+		int new_node;
+		for (int i = 0; i<4; i++){
+			if(i==0) difference = -size_X;
+			if(i==1) difference = 1;
+			if(i==2) difference = size_X;
+			if(i==3) difference = -1;
+			new_node = cur+difference;
+
+			if (gr[cur][i] != 0 && !in(visit_order, new_node) && !isCat(cat_loc, cats, new_node)) {
+				real_cost = cur_cost + gr[cur][i];
+				f_cost = real_cost + heuristic(new_node%size_X, new_node/size_Y, cat_loc, cheese_loc, mouse_loc, cats, cheeses, gr);
+
+
+				if(in_queue(p_queue,new_node)){
+					if(real_cost < cost_array[new_node]){
+						pred[new_node] = cur;
+						cost_array[new_node] = real_cost;
+						deleteRoot(p_queue, new_node);
+						insert(p_queue, f_cost, new_node);
+					}
+				}
+				else{
+					pred[new_node] = cur;
+					cost_array[new_node] = real_cost;
+					insert(p_queue, f_cost, new_node);
+				}
+			}
+		}
+		num_visited++;
+		put(visit_order, cur, num_visited);
+		visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
+	}
+
+	int reversed_path[graph_size][2];
+	int counter = 0;
+	int temp_x = found_x;
+	int temp_y = found_y;
+	int temp_mid; //BETTE NAME?
+
+	//THIS IS TEMP FOR PATH NOT FOUND
+	if(temp_x == -1 || temp_y == -1){
+		return;
+	}
+
+	while (pred[temp_x + temp_y*size_X] != -1) {
+		reversed_path[counter][0] = temp_x;
+		reversed_path[counter][1] = temp_y;
+		temp_mid = pred[temp_x + temp_y*size_X] % size_X;
+		temp_y = pred[temp_x + temp_y*size_X] / size_Y;
+		temp_x = temp_mid;
+		counter++;
+	}
+
+	int total_nodes = counter;
+	counter--;
+
+	for (int i = 0; i < total_nodes; i++) {
+		path[i][0] = reversed_path[counter][0];
+		path[i][1] = reversed_path[counter][1];
+		counter--;
+	}
+	path[total_nodes][0] = path[total_nodes-1][0];
+	path[total_nodes][1] = path[total_nodes-1][1];
+	printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
  }
 
  return;
@@ -318,7 +425,7 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 		These arguments are as described in the search() function above
  */
 
- return(1);		// <-- Evidently you will need to update this.
+ return(0);		// <-- Evidently you will need to update this.
 }
 
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
@@ -447,4 +554,75 @@ int isCat(int cat_loc[10][2], int cats, int check) {
 		}
 	}
 	return 0;
+}
+
+
+void swap(int a[2], int b[2]) {
+  int temp[2];
+  temp[0] = b[0];
+  temp[1] = b[1];
+  b[0] = a[0];
+  b[1] = a[1];
+  a[0] = temp[0];
+  a[1] = temp[1];
+}
+
+// Function to heapify the tree
+void heapify(int array[][2], int i) {
+  if (p_queue_size == 1) {
+    printf("Single element in the heap");
+  } else {
+    // Find the largest among root, left child and right child
+    int largest = i;
+    int l = 2 * i + 1;
+    int r = 2 * i + 2;
+    if (l < p_queue_size && array[l][0] < array[largest][0])
+      largest = l;
+    if (r < p_queue_size && array[r][0] < array[largest][0])
+      largest = r;
+
+    // Swap and continue heapifying if root is not largest
+    if (largest != i) {
+      swap(&array[i][0], &array[largest][0]);
+      heapify(array, largest);
+    }
+  }
+}
+
+// Function to insert an element into the tree
+void insert(int array[][2], int newNum, int node_num) {
+  if (p_queue_size == 0) {
+    array[0][0] = newNum;
+    array[0][1] = node_num;
+    p_queue_size += 1;
+  } else {
+    array[p_queue_size][0] = newNum;
+    array[p_queue_size][1] = node_num;
+    p_queue_size += 1;
+    for (int i = p_queue_size / 2 - 1; i >= 0; i--) {
+      heapify(array, i);
+    }
+  }
+}
+
+// Function to delete an element from the tree
+void deleteRoot(int array[][2], int num) {
+  int i;
+  for (i = 0; i < p_queue_size; i++) {
+    if (num == array[i][1])
+      break;
+  }
+
+  swap(&array[i][0], &array[p_queue_size - 1][0]);
+  p_queue_size -= 1;
+  for (int i = p_queue_size / 2 - 1; i >= 0; i--) {
+    heapify(array, i);
+  }
+}
+
+bool in_queue(int array[][2], int num) {
+	for(int i = 0; i < p_queue_size;i++){
+		if (array[i][1] == num) return true;
+	}
+	return false;
 }
