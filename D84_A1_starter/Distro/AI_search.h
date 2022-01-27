@@ -58,6 +58,7 @@ stack* initStack();
 void push(stack* s, int x);
 int pop(stack* s);
 int emptyStack(stack* s);
+void freeStack(stack* s);
 
 int in(int arr[size_X][size_Y], int search);
 void put(int arr[size_X][size_Y], int val, int order);

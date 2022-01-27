@@ -287,9 +287,99 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 		path[i][1] = reversed_path[counter][1];
 		counter--;
 	}
-	printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
+	path[total_nodes][0] = path[total_nodes-1][0];
+	path[total_nodes][1] = path[total_nodes-1][1];
+	// printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
  //DFS
  } else if (mode == 1) {
+	stack* s = initStack();
+	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	int num_visited = 1;
+	visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
+	int pred[graph_size];
+	int found_x = -1, found_y = -1;
+
+	for (int i = 0; i < graph_size; i++) {
+		pred[i] = -1;
+	}
+
+	push(s, start);
+	
+	while(!emptyStack(s)) {
+		int cur = pop(s);
+
+		int cur_x = cur % size_X;
+		int cur_y = cur/size_Y;
+
+		for (int i = 0; i < cheeses; i++) {
+			if (cur_x == cheese_loc[i][0] && cur_y == cheese_loc[i][1]) {
+				found_x = cur_x;
+				found_y = cur_y;
+				break;
+			}
+		}
+
+		if (found_x != -1 && found_y != -1) {
+			break;
+		}
+
+		if (gr[cur][0] != 0 && !in(visit_order, cur-size_X) && !isCat(cat_loc, cats, cur-size_X)) {
+			push(s, cur-size_X);
+			num_visited++;
+			put(visit_order, cur-size_X, num_visited);
+			pred[cur-size_X] = cur;
+		}
+		if (gr[cur][1] != 0 && !in(visit_order, cur+1) && !isCat(cat_loc, cats, cur+1)) {
+			push(s, cur+1);
+			num_visited++;
+			put(visit_order, cur+1, num_visited);
+			pred[cur+1] = cur;
+		}
+		if (gr[cur][2] != 0 && !in(visit_order, cur+size_X) && !isCat(cat_loc, cats, cur+size_X)) {
+			push(s, cur+size_X);
+			num_visited++;
+			put(visit_order, cur+size_X, num_visited);
+			pred[cur+size_X] = cur;
+		}
+		if (gr[cur][3] != 0 && !in(visit_order, cur-1) && !isCat(cat_loc, cats, cur-1)) {
+			push(s, cur-1);
+			num_visited++;
+			put(visit_order, cur-1, num_visited);
+			pred[cur-1] = cur;
+		}
+	}
+	freeStack(s);
+
+	int reversed_path[graph_size][2];
+	int counter = 0;
+	int temp_x = found_x;
+	int temp_y = found_y;
+	int temp_mid; //BETTE NAME?
+
+	//THIS IS TEMP
+	if(temp_x == -1 || temp_y == -1){
+		return;
+	}
+
+	while (pred[temp_x + temp_y*size_X] != -1) {
+		reversed_path[counter][0] = temp_x;
+		reversed_path[counter][1] = temp_y;
+		temp_mid = pred[temp_x + temp_y*size_X] % size_X;
+		temp_y = pred[temp_x + temp_y*size_X] / size_Y;
+		temp_x = temp_mid;
+		counter++;
+	}
+
+	int total_nodes = counter;
+	counter--;
+
+	for (int i = 0; i < total_nodes; i++) {
+		path[i][0] = reversed_path[counter][0];
+		path[i][1] = reversed_path[counter][1];
+		counter--;
+	}
+	path[total_nodes][0] = path[total_nodes-1][0];
+	path[total_nodes][1] = path[total_nodes-1][1];
 
  //A*
  } else if (mode == 2) {
@@ -423,6 +513,10 @@ int emptyStack(stack* s) {
 	} else {
 		return 0;
 	}
+}
+
+void freeStack(stack* s) {
+	free(s);
 }
 
 int in(int arr[size_X][size_Y], int search) {
