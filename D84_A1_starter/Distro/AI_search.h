@@ -36,6 +36,7 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 
 // If you need to add any function prototypes yourself, you can do so *below* this line.
 
+#define INF graph_size+1
 typedef struct queue {
 	int items[graph_size];
 	int head;
@@ -71,5 +72,7 @@ bool in_queue(int array[][2], int num);
 void deleteRoot(int array[][2], int num);
 void insert(int array[][2], int newNum, int node_num);
 
-#endif
+//This function was an edit on code from https://www.programiz.com/dsa/floyd-warshall-algorithm
+void shortest_paths(double gr[graph_size][4]);
 
+#endif

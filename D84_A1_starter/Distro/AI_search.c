@@ -195,6 +195,8 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 
  // Stub so that the code compiles/runs - The code below will be removed and replaced by your code!
  //BFS
+shortest_paths(gr);
+
  if (mode == 0) {
 	queue* q = initQueue();
 	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
@@ -488,11 +490,51 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 	}
 	path[total_nodes][0] = path[total_nodes-1][0];
 	path[total_nodes][1] = path[total_nodes-1][1];
-	printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
+	//printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
  }
 
  return;
 }
+
+int shortest_matrix[graph_size][graph_size];
+void shortest_paths(double gr[graph_size][4]){
+	static int called;
+	if(called) return;
+	called = 1;
+
+	int graph[graph_size][graph_size];
+
+    for(int i = 0; i < graph_size; i++){
+        for(int j = 0; j < graph_size; j++){
+            graph[i][j] = INF;
+        }
+    }
+
+	for(int i = 0; i < graph_size; i++){
+        if(gr[i][i+1]) graph[i][i+1] = 1;
+		if(gr[i][i-1]) graph[i][i-1] = 1;
+		if(gr[i][i-size_X]) graph[i][i-size_X] = 1;
+		if(gr[i][i+size_X]) graph[i][i+size_X] = 1;
+		graph[i][i] = 0;
+    }
+    
+  int i, j, k;
+
+  for (i = 0; i < graph_size; i++)
+    for (j = 0; j < graph_size; j++)
+      shortest_matrix[i][j] = graph[i][j];
+
+  // Adding vertices individually
+  for (k = 0; k < graph_size; k++) {
+    for (i = 0; i < graph_size; i++) {
+      for (j = 0; j < graph_size; j++) {
+        if (shortest_matrix[i][k] + shortest_matrix[k][j] < shortest_matrix[i][j])
+          shortest_matrix[i][j] = shortest_matrix[i][k] + shortest_matrix[k][j];
+      }
+    }
+  }
+}
+
 
 int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
 {
@@ -514,8 +556,18 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 
 		These arguments are as described in the search() function above
  */
+	//printf("this is calledn\n");
+	int location = x + y*size_X;
+	int mouse_location = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	int cheese_location;
+	int target_cheese;
+	int distance = INF;
+	for (int i = 0; i < cheeses; i++){
+		cheese_location = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
 
- return(0);		// <-- Evidently you will need to update this.
+		if(shortest_matrix[mouse_location][cheese_location] < distance) target_cheese = cheese_location;
+	}
+ 	return(shortest_matrix[location][cheese_location]);		// <-- Evidently you will need to update this.
 }
 
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
