@@ -385,6 +385,7 @@ shortest_paths(gr);
 
  //A*
  } else if (mode == 2) {
+	p_queue_size = 0;
 	int cost_array[graph_size];
 	int p_queue[graph_size][2];
 	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
@@ -407,7 +408,7 @@ shortest_paths(gr);
 	while(p_queue_size > 0){
 
 		cur = p_queue[0][1];
-		cur_cost = p_queue[0][0];
+		cur_cost = cost_array[cur];
 		cur_x = cur % size_X;
 		cur_y = cur/size_Y;
 		deleteRoot(p_queue, cur);
@@ -441,7 +442,7 @@ shortest_paths(gr);
 
 
 				if(in_queue(p_queue,new_node)){
-					if(real_cost < cost_array[new_node]){
+					if(real_cost < cost_array[new_node]){ // real_cost < cost_array[new_node])
 						pred[new_node] = cur;
 						cost_array[new_node] = real_cost;
 						deleteRoot(p_queue, new_node);
@@ -457,7 +458,6 @@ shortest_paths(gr);
 		}
 		num_visited++;
 		put(visit_order, cur, num_visited);
-		visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
 	}
 
 	int reversed_path[graph_size][2];
@@ -490,7 +490,9 @@ shortest_paths(gr);
 	}
 	path[total_nodes][0] = path[total_nodes-1][0];
 	path[total_nodes][1] = path[total_nodes-1][1];
-	//printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
+	//printf("cheese should be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
+	//printf("mouse at %d %d \n", mouse_loc[0][0], mouse_loc[0][1]);
+	//printf("path at %d %d\n", path[0][0], path[0][1]);
  }
 
  return;
@@ -511,10 +513,10 @@ void shortest_paths(double gr[graph_size][4]){
     }
 
 	for(int i = 0; i < graph_size; i++){
-        if(gr[i][i+1]) graph[i][i+1] = 1;
-		if(gr[i][i-1]) graph[i][i-1] = 1;
-		if(gr[i][i-size_X]) graph[i][i-size_X] = 1;
-		if(gr[i][i+size_X]) graph[i][i+size_X] = 1;
+        if(gr[i][1]) graph[i][i+1] = 1;
+		if(gr[i][3]) graph[i][i-1] = 1;
+		if(gr[i][0]) graph[i][i-size_X] = 1;
+		if(gr[i][2]) graph[i][i+size_X] = 1;
 		graph[i][i] = 0;
     }
     
@@ -565,9 +567,12 @@ int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_lo
 	for (int i = 0; i < cheeses; i++){
 		cheese_location = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
 
-		if(shortest_matrix[mouse_location][cheese_location] < distance) target_cheese = cheese_location;
+		if(shortest_matrix[mouse_location][cheese_location] < distance){
+			target_cheese = cheese_location;
+			distance = shortest_matrix[mouse_location][cheese_location];
+		}
 	}
- 	return(shortest_matrix[location][cheese_location]);		// <-- Evidently you will need to update this.
+ 	return(shortest_matrix[location][target_cheese]);		// <-- Evidently you will need to update this.
 }
 
 int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
@@ -587,7 +592,52 @@ int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int 
 	Input arguments have the same meaning as in the H_cost() function above.
  */
 
- return(1);		// <-- Evidently you will need to update this.
+	int target_cheese = 0;
+	int cur_cat_loc = 0;
+	int cur_cheese_loc = 0;
+	int cheese_mouse_value[cheeses];
+	int mouse_location = x + y*size_X;
+
+	for(int i = 0; i < cheeses; i++){
+		for(int j = 0; j < cats; j++) {
+			cur_cheese_loc = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
+			cur_cat_loc = cat_loc[j][0] + cat_loc[j][1]*size_X;
+			cheese_mouse_value[i] += shortest_matrix[cur_cheese_loc][cur_cat_loc];
+		}
+		cheese_mouse_value[i] += (graph_size+1)/(shortest_matrix[cur_cheese_loc][mouse_location]+1);
+		//maybe less factor on closness to cheese
+	}
+	//add bigger number the closer the mouse is to the cheese
+	//mouse_to_cheese = (graphic_size+1)/(mouse_to_cheese+1)
+	//cheese_mouse_value[i]
+	int max = -1;
+	for(int i = 0; i < cheeses; i++){
+		cur_cheese_loc = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
+		if(cheese_mouse_value[i] > max){
+			max = cheese_mouse_value[i];
+			target_cheese = cur_cheese_loc;
+		}
+	}
+
+	int mouse_to_cheese = shortest_matrix[mouse_location][target_cheese];
+
+	int distance_from_cats = 0;
+	for(int i = 0; i < cats; i++){
+		cur_cat_loc = cat_loc[i][0] + cat_loc[i][1]*size_X;
+		distance_from_cats += shortest_matrix[mouse_location][cur_cat_loc];
+	}
+
+	int min_distance_from_cats = INF;
+	for(int i = 0; i < cats; i++){
+		cur_cat_loc = cat_loc[i][0] + cat_loc[i][1]*size_X;
+		if(shortest_matrix[mouse_location][cur_cat_loc] < min_distance_from_cats)
+			min_distance_from_cats = shortest_matrix[mouse_location][cur_cat_loc];
+	}
+
+	//return mouse_to_cheese - distance_from_cats;
+	//return mouse_to_cheese + 10/(distance_from_cats+1);
+	return mouse_to_cheese + (graph_size*10)/((min_distance_from_cats+1)*(min_distance_from_cats+1));
+ 	//return(1);		// <-- Evidently you will need to update this.
 }
 
 queue* initQueue() {
