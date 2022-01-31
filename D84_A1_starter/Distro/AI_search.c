@@ -30,7 +30,7 @@
 % 1) Student Name: Nazmus Saqeeb		
 % 2) Student Name: Mutasem Kharsa
 %
-% 1) Student number: 1006206007
+% 1) Student number: 1006306007
 % 2) Student number: 1006211083
 % 
 % 1) UtorID: saqeebna

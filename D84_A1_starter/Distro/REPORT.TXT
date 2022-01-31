@@ -12,7 +12,7 @@ Student Name 1 (last, first): Saqeeb, Nazmus
 
 Student Name 2 (last, first): Kharsa, Mutasem
 
-Student number 1: 1006206007
+Student number 1: 1006306007
 
 Student number 2: 1006211083
 
