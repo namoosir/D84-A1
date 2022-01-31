@@ -68,11 +68,16 @@ int isCat(int cat_loc[10][2], int cats, int check);
 
 //This was an edit on code from https://www.programiz.com/dsa/priority-queue
 int p_queue_size;
-bool in_queue(int array[][2], int num);
+int in_queue(int array[][2], int num);
 void deleteRoot(int array[][2], int num);
 void insert(int array[][2], int newNum, int node_num);
 
 //This function was an edit on code from https://www.programiz.com/dsa/floyd-warshall-algorithm
 void shortest_paths(double gr[graph_size][4]);
+int shortest_matrix[graph_size][graph_size];
 
+void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]));
+void a_star(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]));
+void dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]));
+void calculate_path(int found_x, int found_y, int pred[graph_size], int path[graph_size][2]);
 #endif

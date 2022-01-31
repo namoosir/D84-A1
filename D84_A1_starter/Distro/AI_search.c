@@ -31,14 +31,14 @@
 % 2) Student Name: Mutasem Kharsa
 %
 % 1) Student number: 1006206007
-% 2) Student number:
+% 2) Student number: 1006211083
 % 
 % 1) UtorID: saqeebna
-% 2) UtorID
+% 2) UtorID: kharsamu
 % 
 % We hereby certify that the work contained here is our own
 %
-%  Nazmus Saqeeb					
+%  Nazmus Saqeeb					Mutasem Kharsa
 % (sign with your name)            (sign with your name)
 ***********************************************************************/
 
@@ -195,15 +195,131 @@ void search(double gr[graph_size][4], int path[graph_size][2], int visit_order[s
 
  // Stub so that the code compiles/runs - The code below will be removed and replaced by your code!
  //BFS
-shortest_paths(gr);
 
+ static int called;
+ if (!called)
+	 shortest_paths(gr);
+ called = 1;
+
+//BFS
  if (mode == 0) {
+	bfs(gr, path, visit_order, cat_loc, cats, cheese_loc, cheeses, mouse_loc, mode, heuristic);
+ //DFS
+ } else if (mode == 1) {
+	dfs(gr, path, visit_order, cat_loc, cats, cheese_loc, cheeses, mouse_loc, mode, heuristic);
+ //A*
+ } else if (mode == 2) {
+	a_star(gr, path, visit_order, cat_loc, cats, cheese_loc, cheeses, mouse_loc, mode, heuristic);
+ }
+
+ return;
+}
+
+
+int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
+{
+ /*
+	This function computes and returns the heuristic cost for location x,y.
+	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
+	The goal is cheese. Which cheese is up to you.
+	Whatever you code here, your heuristic must be admissible.
+
+	Input arguments:
+
+		x,y - Location for which this function will compute a heuristic search cost
+		cat_loc - Cat locations
+		cheese_loc - Cheese locations
+		mouse_loc - Mouse location
+		cats - # of cats
+		cheeses - # of cheeses
+		gr - The graph's adjacency list for the maze
+
+		These arguments are as described in the search() function above
+ */
+	int location = x + y*size_X;
+	int mouse_location = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	int cheese_location;
+	int target_cheese;
+	int distance = INF;
+	for (int i = 0; i < cheeses; i++){
+		cheese_location = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
+
+		if(shortest_matrix[mouse_location][cheese_location] < distance){
+			target_cheese = cheese_location;
+			distance = shortest_matrix[mouse_location][cheese_location];
+		}
+	}
+ 	return(shortest_matrix[location][target_cheese]);
+}
+
+int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
+{
+ /*
+	This function computes and returns the heuristic cost for location x,y.
+	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
+	The goal is cheese. 
+
+	However - this time you want your heuristic function to help the mouse avoid being eaten.
+	Therefore: You have to somehow incorporate knowledge of the cats' locations into your
+	heuristic cost estimate. How well you do this will determine how well your mouse behaves
+	and how good it is at escaping kitties.
+
+	This heuristic *does not have to* be admissible.
+
+	Input arguments have the same meaning as in the H_cost() function above.
+ */
+
+	int target_cheese = 0;
+	int cur_cat_loc = 0;
+	int cur_cheese_loc = 0;
+	int cheese_mouse_value[cheeses];
+	int mouse_location = x + y*size_X;
+
+	for(int i = 0; i < cheeses; i++){
+		for(int j = 0; j < cats; j++) {
+			cur_cheese_loc = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
+			cur_cat_loc = cat_loc[j][0] + cat_loc[j][1]*size_X;
+			cheese_mouse_value[i] += shortest_matrix[cur_cheese_loc][cur_cat_loc];
+		}
+		cheese_mouse_value[i] += (graph_size+1)/(shortest_matrix[cur_cheese_loc][mouse_location]+1);
+	}
+
+	int max = -1;
+	for(int i = 0; i < cheeses; i++){
+		cur_cheese_loc = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
+		if(cheese_mouse_value[i] > max){
+			max = cheese_mouse_value[i];
+			target_cheese = cur_cheese_loc;
+		}
+	}
+
+	int mouse_to_cheese = shortest_matrix[mouse_location][target_cheese];
+
+	int distance_from_cats = 0;
+	for(int i = 0; i < cats; i++){
+		cur_cat_loc = cat_loc[i][0] + cat_loc[i][1]*size_X;
+		distance_from_cats += shortest_matrix[mouse_location][cur_cat_loc];
+	}
+
+	int min_distance_from_cats = INF;
+	for(int i = 0; i < cats; i++){
+		cur_cat_loc = cat_loc[i][0] + cat_loc[i][1]*size_X;
+		if(shortest_matrix[mouse_location][cur_cat_loc] < min_distance_from_cats)
+			min_distance_from_cats = shortest_matrix[mouse_location][cur_cat_loc];
+	}
+
+	return mouse_to_cheese + (graph_size*10)/((min_distance_from_cats+0.01)*(min_distance_from_cats+0.01));
+}
+
+void bfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
+{
 	queue* q = initQueue();
-	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
 	int num_visited = 1;
-	visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
 	int pred[graph_size];
 	int found_x = -1, found_y = -1;
+	int cur,cur_x,cur_y;
+	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
 
 	for (int i = 0; i < graph_size; i++) {
 		pred[i] = -1;
@@ -212,14 +328,10 @@ shortest_paths(gr);
 	enqueue(q, start);
 
 	while(!emptyQueue(q)) {
-		// printf("here\n");
 
-		int cur = dequeue(q);
-
-		//printQueue(q);
-
-		int cur_x = cur % size_X;
-		int cur_y = cur/size_Y;
+		cur = dequeue(q);
+		cur_x = cur % size_X;
+		cur_y = cur/size_Y;
 
 		for (int i = 0; i < cheeses; i++) {
 			if (cur_x == cheese_loc[i][0] && cur_y == cheese_loc[i][1]) {
@@ -261,45 +373,19 @@ shortest_paths(gr);
 	
 	freeQueue(q);
 
-	int reversed_path[graph_size][2];
-	int counter = 0;
-	int temp_x = found_x;
-	int temp_y = found_y;
-	int temp_mid; //BETTE NAME?
+	calculate_path(found_x, found_y, pred, path);
+	return;
+}
 
-	//THIS IS TEMP FOR PATH NOT FOUND
-	if(temp_x == -1 || temp_y == -1){
-		return;
-	}
-
-	while (pred[temp_x + temp_y*size_X] != -1) {
-		reversed_path[counter][0] = temp_x;
-		reversed_path[counter][1] = temp_y;
-		temp_mid = pred[temp_x + temp_y*size_X] % size_X;
-		temp_y = pred[temp_x + temp_y*size_X] / size_Y;
-		temp_x = temp_mid;
-		counter++;
-	}
-
-	int total_nodes = counter;
-	counter--;
-
-	for (int i = 0; i < total_nodes; i++) {
-		path[i][0] = reversed_path[counter][0];
-		path[i][1] = reversed_path[counter][1];
-		counter--;
-	}
-	path[total_nodes][0] = path[total_nodes-1][0];
-	path[total_nodes][1] = path[total_nodes-1][1];
-	// printf("cheese shoukd be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
- //DFS
- } else if (mode == 1) {
+void dfs(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
+{
 	stack* s = initStack();
-	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
 	int num_visited = 1;
-	visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
 	int pred[graph_size];
 	int found_x = -1, found_y = -1;
+	int cur,cur_x,cur_y;
+	int start = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
+	visit_order[mouse_loc[0][0]][mouse_loc[0][1]] = num_visited;
 
 	for (int i = 0; i < graph_size; i++) {
 		pred[i] = -1;
@@ -308,10 +394,10 @@ shortest_paths(gr);
 	push(s, start);
 	
 	while(!emptyStack(s)) {
-		int cur = pop(s);
 
-		int cur_x = cur % size_X;
-		int cur_y = cur/size_Y;
+		cur = pop(s);
+		cur_x = cur % size_X;
+		cur_y = cur/size_Y;
 
 		for (int i = 0; i < cheeses; i++) {
 			if (cur_x == cheese_loc[i][0] && cur_y == cheese_loc[i][1]) {
@@ -352,39 +438,12 @@ shortest_paths(gr);
 	}
 	freeStack(s);
 
-	int reversed_path[graph_size][2];
-	int counter = 0;
-	int temp_x = found_x;
-	int temp_y = found_y;
-	int temp_mid; //BETTE NAME?
+	calculate_path(found_x, found_y, pred, path);
+	return;
+}
 
-	//THIS IS TEMP
-	if(temp_x == -1 || temp_y == -1){
-		return;
-	}
-
-	while (pred[temp_x + temp_y*size_X] != -1) {
-		reversed_path[counter][0] = temp_x;
-		reversed_path[counter][1] = temp_y;
-		temp_mid = pred[temp_x + temp_y*size_X] % size_X;
-		temp_y = pred[temp_x + temp_y*size_X] / size_Y;
-		temp_x = temp_mid;
-		counter++;
-	}
-
-	int total_nodes = counter;
-	counter--;
-
-	for (int i = 0; i < total_nodes; i++) {
-		path[i][0] = reversed_path[counter][0];
-		path[i][1] = reversed_path[counter][1];
-		counter--;
-	}
-	path[total_nodes][0] = path[total_nodes-1][0];
-	path[total_nodes][1] = path[total_nodes-1][1];
-
- //A*
- } else if (mode == 2) {
+void a_star(double gr[graph_size][4], int path[graph_size][2], int visit_order[size_X][size_Y], int cat_loc[10][2], int cats, int cheese_loc[10][2], int cheeses, int mouse_loc[1][2], int mode, int (*heuristic)(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4]))
+{
 	p_queue_size = 0;
 	int cost_array[graph_size];
 	int p_queue[graph_size][2];
@@ -392,6 +451,7 @@ shortest_paths(gr);
 	int pred[graph_size];
 	int found_x = -1, found_y = -1;
 	int num_visited = 0;
+
 	for (int i = 0; i < graph_size; i++) {
 		pred[i] = -1;
 		cost_array[i] = -1;
@@ -400,10 +460,11 @@ shortest_paths(gr);
 
 	insert(p_queue, 0, start);
 
-	int cur;
-	int cur_x;
-	int cur_y;
-	int cur_cost;
+	int cur, cur_x, cur_y, cur_cost;
+	int difference;
+	int real_cost;
+	int f_cost;
+	int new_node;
 
 	while(p_queue_size > 0){
 
@@ -425,10 +486,6 @@ shortest_paths(gr);
 			break;
 		}
 		
-		int difference;
-		int real_cost;
-		int f_cost;
-		int new_node;
 		for (int i = 0; i<4; i++){
 			if(i==0) difference = -size_X;
 			if(i==1) difference = 1;
@@ -440,9 +497,8 @@ shortest_paths(gr);
 				real_cost = cur_cost + gr[cur][i];
 				f_cost = real_cost + heuristic(new_node%size_X, new_node/size_Y, cat_loc, cheese_loc, mouse_loc, cats, cheeses, gr);
 
-
 				if(in_queue(p_queue,new_node)){
-					if(real_cost < cost_array[new_node]){ // real_cost < cost_array[new_node])
+					if(real_cost < cost_array[new_node]){
 						pred[new_node] = cur;
 						cost_array[new_node] = real_cost;
 						deleteRoot(p_queue, new_node);
@@ -460,13 +516,17 @@ shortest_paths(gr);
 		put(visit_order, cur, num_visited);
 	}
 
+	calculate_path(found_x, found_y, pred, path);
+	return;
+}
+
+void calculate_path(int found_x, int found_y, int pred[graph_size], int path[graph_size][2]) {
 	int reversed_path[graph_size][2];
 	int counter = 0;
 	int temp_x = found_x;
 	int temp_y = found_y;
-	int temp_mid; //BETTE NAME?
+	int temp_pred;
 
-	//THIS IS TEMP FOR PATH NOT FOUND
 	if(temp_x == -1 || temp_y == -1){
 		return;
 	}
@@ -474,9 +534,9 @@ shortest_paths(gr);
 	while (pred[temp_x + temp_y*size_X] != -1) {
 		reversed_path[counter][0] = temp_x;
 		reversed_path[counter][1] = temp_y;
-		temp_mid = pred[temp_x + temp_y*size_X] % size_X;
+		temp_pred = pred[temp_x + temp_y*size_X] % size_X;
 		temp_y = pred[temp_x + temp_y*size_X] / size_Y;
-		temp_x = temp_mid;
+		temp_x = temp_pred;
 		counter++;
 	}
 
@@ -490,156 +550,10 @@ shortest_paths(gr);
 	}
 	path[total_nodes][0] = path[total_nodes-1][0];
 	path[total_nodes][1] = path[total_nodes-1][1];
-	//printf("cheese should be at %d %d \n", path[total_nodes-1][0], path[total_nodes-1][1]);
-	//printf("mouse at %d %d \n", mouse_loc[0][0], mouse_loc[0][1]);
-	//printf("path at %d %d\n", path[0][0], path[0][1]);
- }
-
- return;
+	return;
 }
 
-int shortest_matrix[graph_size][graph_size];
-void shortest_paths(double gr[graph_size][4]){
-	static int called;
-	if(called) return;
-	called = 1;
-
-	int graph[graph_size][graph_size];
-
-    for(int i = 0; i < graph_size; i++){
-        for(int j = 0; j < graph_size; j++){
-            graph[i][j] = INF;
-        }
-    }
-
-	for(int i = 0; i < graph_size; i++){
-        if(gr[i][1]) graph[i][i+1] = 1;
-		if(gr[i][3]) graph[i][i-1] = 1;
-		if(gr[i][0]) graph[i][i-size_X] = 1;
-		if(gr[i][2]) graph[i][i+size_X] = 1;
-		graph[i][i] = 0;
-    }
-    
-  int i, j, k;
-
-  for (i = 0; i < graph_size; i++)
-    for (j = 0; j < graph_size; j++)
-      shortest_matrix[i][j] = graph[i][j];
-
-  // Adding vertices individually
-  for (k = 0; k < graph_size; k++) {
-    for (i = 0; i < graph_size; i++) {
-      for (j = 0; j < graph_size; j++) {
-        if (shortest_matrix[i][k] + shortest_matrix[k][j] < shortest_matrix[i][j])
-          shortest_matrix[i][j] = shortest_matrix[i][k] + shortest_matrix[k][j];
-      }
-    }
-  }
-}
-
-
-int H_cost(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
-{
- /*
-	This function computes and returns the heuristic cost for location x,y.
-	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
-	The goal is cheese. Which cheese is up to you.
-	Whatever you code here, your heuristic must be admissible.
-
-	Input arguments:
-
-		x,y - Location for which this function will compute a heuristic search cost
-		cat_loc - Cat locations
-		cheese_loc - Cheese locations
-		mouse_loc - Mouse location
-		cats - # of cats
-		cheeses - # of cheeses
-		gr - The graph's adjacency list for the maze
-
-		These arguments are as described in the search() function above
- */
-	//printf("this is calledn\n");
-	int location = x + y*size_X;
-	int mouse_location = mouse_loc[0][0] + mouse_loc[0][1]*size_X;
-	int cheese_location;
-	int target_cheese;
-	int distance = INF;
-	for (int i = 0; i < cheeses; i++){
-		cheese_location = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
-
-		if(shortest_matrix[mouse_location][cheese_location] < distance){
-			target_cheese = cheese_location;
-			distance = shortest_matrix[mouse_location][cheese_location];
-		}
-	}
- 	return(shortest_matrix[location][target_cheese]);		// <-- Evidently you will need to update this.
-}
-
-int H_cost_nokitty(int x, int y, int cat_loc[10][2], int cheese_loc[10][2], int mouse_loc[1][2], int cats, int cheeses, double gr[graph_size][4])
-{
- /*
-	This function computes and returns the heuristic cost for location x,y.
-	As discussed in lecture, this means estimating the cost of getting from x,y to the goal. 
-	The goal is cheese. 
-
-	However - this time you want your heuristic function to help the mouse avoid being eaten.
-	Therefore: You have to somehow incorporate knowledge of the cats' locations into your
-	heuristic cost estimate. How well you do this will determine how well your mouse behaves
-	and how good it is at escaping kitties.
-
-	This heuristic *does not have to* be admissible.
-
-	Input arguments have the same meaning as in the H_cost() function above.
- */
-
-	int target_cheese = 0;
-	int cur_cat_loc = 0;
-	int cur_cheese_loc = 0;
-	int cheese_mouse_value[cheeses];
-	int mouse_location = x + y*size_X;
-
-	for(int i = 0; i < cheeses; i++){
-		for(int j = 0; j < cats; j++) {
-			cur_cheese_loc = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
-			cur_cat_loc = cat_loc[j][0] + cat_loc[j][1]*size_X;
-			cheese_mouse_value[i] += shortest_matrix[cur_cheese_loc][cur_cat_loc];
-		}
-		cheese_mouse_value[i] += (graph_size+1)/(shortest_matrix[cur_cheese_loc][mouse_location]+1);
-		//maybe less factor on closness to cheese
-	}
-	//add bigger number the closer the mouse is to the cheese
-	//mouse_to_cheese = (graphic_size+1)/(mouse_to_cheese+1)
-	//cheese_mouse_value[i]
-	int max = -1;
-	for(int i = 0; i < cheeses; i++){
-		cur_cheese_loc = cheese_loc[i][0] + cheese_loc[i][1]*size_X;
-		if(cheese_mouse_value[i] > max){
-			max = cheese_mouse_value[i];
-			target_cheese = cur_cheese_loc;
-		}
-	}
-
-	int mouse_to_cheese = shortest_matrix[mouse_location][target_cheese];
-
-	int distance_from_cats = 0;
-	for(int i = 0; i < cats; i++){
-		cur_cat_loc = cat_loc[i][0] + cat_loc[i][1]*size_X;
-		distance_from_cats += shortest_matrix[mouse_location][cur_cat_loc];
-	}
-
-	int min_distance_from_cats = INF;
-	for(int i = 0; i < cats; i++){
-		cur_cat_loc = cat_loc[i][0] + cat_loc[i][1]*size_X;
-		if(shortest_matrix[mouse_location][cur_cat_loc] < min_distance_from_cats)
-			min_distance_from_cats = shortest_matrix[mouse_location][cur_cat_loc];
-	}
-
-	//return mouse_to_cheese - distance_from_cats;
-	//return mouse_to_cheese + 10/(distance_from_cats+1);
-	return mouse_to_cheese + (graph_size*10)/((min_distance_from_cats+1)*(min_distance_from_cats+1));
- 	//return(1);		// <-- Evidently you will need to update this.
-}
-
+//-------CODE FOR QUEUE----REFRENCE FROM https://www.programiz.com/dsa/floyd-warshall-algorithm
 queue* initQueue() {
 	queue* q = (queue*)malloc(sizeof(queue));
 	q->head=-1;
@@ -689,7 +603,9 @@ void printQueue(queue* q) {
 void freeQueue(queue* q) {
 	free(q);
 }
+//-----------DONE QUEUE CODE----------
 
+//-------CODE FOR STACK----REFRENCE FROM https://www.programiz.com/dsa/floyd-warshall-algorithm
 stack* initStack() {
 	stack* s = (stack*)malloc(sizeof(stack));
 	s->top = -1;
@@ -725,6 +641,7 @@ int emptyStack(stack* s) {
 void freeStack(stack* s) {
 	free(s);
 }
+//-----------DONE STACK CODE----------
 
 int in(int arr[size_X][size_Y], int search) {
 	int x = search % size_X;
@@ -756,7 +673,42 @@ int isCat(int cat_loc[10][2], int cats, int check) {
 	return 0;
 }
 
+//-------CODE FOR SHORTEST PATHS----REFRENCE FROM https://www.programiz.com/dsa/floyd-warshall-algorithm
+void shortest_paths(double gr[graph_size][4]){
+	int graph[graph_size][graph_size];
 
+    for(int i = 0; i < graph_size; i++){
+        for(int j = 0; j < graph_size; j++){
+            graph[i][j] = INF;
+        }
+    }
+
+	for(int i = 0; i < graph_size; i++){
+        if(gr[i][1]) graph[i][i+1] = 1;
+		if(gr[i][3]) graph[i][i-1] = 1;
+		if(gr[i][0]) graph[i][i-size_X] = 1;
+		if(gr[i][2]) graph[i][i+size_X] = 1;
+		graph[i][i] = 0;
+    }
+
+  int i, j, k;
+
+  for (i = 0; i < graph_size; i++)
+    for (j = 0; j < graph_size; j++)
+      shortest_matrix[i][j] = graph[i][j];
+
+  for (k = 0; k < graph_size; k++) {
+    for (i = 0; i < graph_size; i++) {
+      for (j = 0; j < graph_size; j++) {
+        if (shortest_matrix[i][k] + shortest_matrix[k][j] < shortest_matrix[i][j])
+          shortest_matrix[i][j] = shortest_matrix[i][k] + shortest_matrix[k][j];
+      }
+    }
+  }
+}
+//-----------DONE SHORTEST PATHS CODE----------
+
+//-------CODE FOR MIN HEAP----REFRENCE FROM https://www.programiz.com/dsa/priority-queue
 void swap(int a[2], int b[2]) {
   int temp[2];
   temp[0] = b[0];
@@ -766,13 +718,10 @@ void swap(int a[2], int b[2]) {
   a[0] = temp[0];
   a[1] = temp[1];
 }
-
-// Function to heapify the tree
 void heapify(int array[][2], int i) {
   if (p_queue_size == 1) {
     printf("Single element in the heap");
   } else {
-    // Find the largest among root, left child and right child
     int largest = i;
     int l = 2 * i + 1;
     int r = 2 * i + 2;
@@ -781,15 +730,12 @@ void heapify(int array[][2], int i) {
     if (r < p_queue_size && array[r][0] < array[largest][0])
       largest = r;
 
-    // Swap and continue heapifying if root is not largest
     if (largest != i) {
       swap(&array[i][0], &array[largest][0]);
       heapify(array, largest);
     }
   }
 }
-
-// Function to insert an element into the tree
 void insert(int array[][2], int newNum, int node_num) {
   if (p_queue_size == 0) {
     array[0][0] = newNum;
@@ -804,7 +750,6 @@ void insert(int array[][2], int newNum, int node_num) {
     }
   }
 }
-
 // Function to delete an element from the tree
 void deleteRoot(int array[][2], int num) {
   int i;
@@ -812,17 +757,16 @@ void deleteRoot(int array[][2], int num) {
     if (num == array[i][1])
       break;
   }
-
   swap(&array[i][0], &array[p_queue_size - 1][0]);
   p_queue_size -= 1;
   for (int i = p_queue_size / 2 - 1; i >= 0; i--) {
     heapify(array, i);
   }
 }
-
-bool in_queue(int array[][2], int num) {
+int in_queue(int array[][2], int num) {
 	for(int i = 0; i < p_queue_size;i++){
-		if (array[i][1] == num) return true;
+		if (array[i][1] == num) return 1;
 	}
-	return false;
+	return 0;
 }
+//-----------DONE MIN HEAP CODE----------

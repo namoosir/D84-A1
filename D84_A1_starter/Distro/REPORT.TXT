@@ -8,17 +8,17 @@ mark.
 
 ________________________________________________
 
-Student Name 1 (last, first):
+Student Name 1 (last, first): Saqeeb, Nazmus
 
-Student Name 2 (last, first):
+Student Name 2 (last, first): Kharsa, Mutasem
 
-Student number 1:
+Student number 1: 1006206007
 
-Student number 2:
+Student number 2: 1006211083
 
-UTORid 1:
+UTORid 1: saqeebna
 
-UTORid 2:
+UTORid 2: kharsamu
 
 READ THIS AND SIGN YOUR NAME AT THE END:
 
@@ -26,7 +26,7 @@ READ THIS AND SIGN YOUR NAME AT THE END:
 honesty and plaguarism. All work submitted as part
 of this assignment is my own.
 
-	Signed: _(student 1 name here)__	_(student 2 name here)__
+	Signed: _Nazmus Saqeeb__	_Mutasem Kharsa__
 
 
 (-5 marks for failing to provide the identifying
@@ -39,26 +39,60 @@ but explain carefully when needed.
 1 .- (1 marks) Of BFS and DFS, which search algorithm yields the best results? (i.e. which is more likely
      to get the mouse to the cheese safely before being eaten?)
 
+     BFS, because DFS gets stuck and does not work.
+
 
 2 .- (1 marks) Does this mean that in general BFS is a better search algorithm? (yes/no and give reasons to
      support your answer based on your observations)
 
+     No, it happens to be that in this case, BFS works better. This is because search is called frequently,
+     and because in this scenario exploring wider instead of deeper is better as we want shortest paths.
+     DFS is better than BFS when you want to explore the full depth, like solving chess puzzles using AI.
+
 
 3 .- (2 marks) Describe the heuristic function you used for A* search. Why is this heuristic admissible?
 
+     The heuristic that we used for A* is the weight (is also the length) of the shortest path from the mouse's location to the cheese's location.
+     Here, shortest path means shortest legal path (not crossing over walls or into cats).
+     This is admissible as it is always larger than or equal to 0 as length of the path is never negative.
+     The length of the shortest path to the cheese cannot be less than the shortest path to the cheese, and thus it is admissible.
+
 
 4 .- (1 marks) Explain how your heuristic function accounts for the presence of multiple cheeses.
+
+     When there are multiple cheeses, we pick the cheese that has the shortest path from the
+     mouse.
 
 
 5 .- (1 marks) Is A* equivalent to BFS for this problem? or is it better/worse? explain your answer based on 
      your observations.
 
+     A* is not equivalent to BFS because A* explores less of the graph than BFS, this results in it being faster
+     for longer searches. Asides from speed, however, BFS and A* are the same in that they will both find
+     the cheese that has the shortest path from the mouse, and they will both take a path with the
+     shortest length to that cheese.
+
 6 .- (2 marks) Describe your heuristic function for A*-nokitty. How does it work? what factors are considered
      into the cost function? is it admissible (yes/no and why)?
+
+     (Close means length of shortest path.)
+     For picking the cheese, we consider how close cats are to each cheese,
+     as well as how close the cheese is to the mouse. The cheese with the least cats around it, and is closer to the mouse, is picked
+     (called target cheese).
+     Then, it considers how close the mouse is to the nearest cat, as well as how close it is to the target cheese. The closer the mouse is to the cat,
+     the larger the heuristic cost blows up. This is not an admissible heuristic because in many cases our heuristic will be significantly larger
+     than the actual cost to get to the target node because the nature of the heuristic causes the cost to blow up so that the mouse will avoid the cat.
 
 7 .- (2 marks) What is the largest limitation of the search algorithms implemented in this assignment?
      (i.e. is there anything we are missing that could lead to a smarter mouse?) - this is
      a more or less open question, but we talked about it in lecture!
+     
+     One limitation of search algorithms is that a path to the goal must always be found, if we had a sort of iterative algorithm where the mouse can choose
+     to run away from cats, and then move to cheese, it would more successful. For example, if cats are all around a cheese, the search will just try to force the
+     way to the cheese, while a different algorithm can attempt to run away.
+     Another limitation is that the search algorithms do not take into consideration the future movements of the cats. This would be a problem if the cats were 
+     smarter and worked together to corner the mouse as it would try to run away from one cat and run into another. If our search algorithms utilized some 
+     prediction of the cats' paths then it would definitely lead to a smarter mouse as it would be able to make better decisions.
 
 _____________________________________________________
 
@@ -67,15 +101,15 @@ doesn't work, or what problems exist.
 	
 		Complete/Working	Partial		Not done
 
-DFS
+DFS            x
 
-BFS
+BFS            x
 
-A*
+A*             x
 
-H
+H              x
 
-H_no_cats
+H_no_cats      x
 
 _____________________________________________________
 
